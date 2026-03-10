@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Student Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="brand">🎓 Student Management System</a>
+        <div>
+            <a href="/auth/signup">Signup</a>
+            <a href="/auth/login">Login</a>
+        </div>
+    </nav>
+
+    <!-- Auth Container -->
+    <div class="auth-container">
+        <div class="card">
+            <h2 class="auth-title">🔐 Login</h2>
+
+            <!-- Flash Messages (FIXED) -->
+            <% if (typeof error_msg !== 'undefined' && error_msg) { %>
+                <div class="alert alert-danger"><%= error_msg %></div>
+            <% } %>
+            <% if (typeof success_msg !== 'undefined' && success_msg) { %>
+                <div class="alert alert-success"><%= success_msg %></div>
+            <% } %>
+
+            <!-- Login Form -->
+            <form action="/auth/login" method="POST">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+
+            <p style="margin-top: 20px; text-align: center;">
+                Don't have an account? <a href="/auth/signup" style="color: #3498db;">Signup here</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

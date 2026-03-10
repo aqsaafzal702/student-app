@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student - Student Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="brand">🎓 Student Management System</a>
+        <div>
+            <% if (user) { %>
+                <a href="/students">Students</a>
+                <a href="/courses">Courses</a>
+                <a href="/auth/logout">Logout (<%= user.username %>)</a>
+            <% } else { %>
+                <a href="/auth/login">Login</a>
+            <% } %>
+        </div>
+    </nav>
+
+    <!-- Container -->
+    <div class="container">
+        <div class="card">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>➕ Add New Student</h1>
+                <a href="/students" class="btn btn-primary">← Back to Students</a>
+            </div>
+
+            <!-- Flash Messages -->
+            <% if (error_msg) { %>
+                <div class="alert alert-danger"><%= error_msg %></div>
+            <% } %>
+            <% if (success_msg) { %>
+                <div class="alert alert-success"><%= success_msg %></div>
+            <% } %>
+
+            <!-- Add Student Form -->
+            <form action="/students/add" method="POST">
+                <div class="form-group">
+                    <label for="name">Student Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter student name">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter email address">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="text" id="phone" name="phone" required placeholder="Enter phone number">
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <textarea id="address" name="address" rows="4" required placeholder="Enter address"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success">Add Student</button>
+                <a href="/students" class="btn btn-primary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

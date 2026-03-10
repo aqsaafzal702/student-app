@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup - Student Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="brand">🎓 Student Management System</a>
+        <div>
+            <a href="/auth/signup">Signup</a>
+            <a href="/auth/login">Login</a>
+        </div>
+    </nav>
+
+    <!-- Auth Container -->
+    <div class="auth-container">
+        <div class="card">
+            <h2 class="auth-title">📝 Signup</h2>
+
+            <!-- Flash Messages (FIXED) -->
+            <% if (typeof error_msg !== 'undefined' && error_msg) { %>
+                <div class="alert alert-danger"><%= error_msg %></div>
+            <% } %>
+            <% if (typeof success_msg !== 'undefined' && success_msg) { %>
+                <div class="alert alert-success"><%= success_msg %></div>
+            <% } %>
+
+            <!-- Signup Form -->
+            <form action="/auth/signup" method="POST">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Enter your username">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Signup</button>
+            </form>
+
+            <p style="margin-top: 20px; text-align: center;">
+                Already have an account? <a href="/auth/login" style="color: #3498db;">Login here</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

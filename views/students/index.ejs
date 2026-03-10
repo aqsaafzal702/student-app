@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students - Student Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="brand">🎓 Student Management System</a>
+        <div>
+            <% if (user) { %>
+                <a href="/students">Students</a>
+                <a href="/courses">Courses</a>
+                <a href="/auth/logout">Logout (<%= user.username %>)</a>
+            <% } else { %>
+                <a href="/auth/login">Login</a>
+            <% } %>
+        </div>
+    </nav>
+
+    <!-- Container -->
+    <div class="container">
+        <div class="card">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>📚 All Students</h1>
+                <a href="/students/add" class="btn btn-success">+ Add New Student</a>
+            </div>
+
+            <!-- Flash Messages -->
+            <% if (success_msg) { %>
+                <div class="alert alert-success"><%= success_msg %></div>
+            <% } %>
+            <% if (error_msg) { %>
+                <div class="alert alert-danger"><%= error_msg %></div>
+            <% } %>
+
+            <!-- Students Table -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (students.length > 0) { %>
+                        <% students.forEach(student => { %>
+                            <tr>
+                                <td><%= student.id %></td>
+                                <td><%= student.name %></td>
+                                <td><%= student.email %></td>
+                                <td><%= student.phone %></td>
+                                <td><%= student.address %></td>
+                                <td>
+                                    <a href="/students/edit/<%= student.id %>" class="btn btn-warning">Edit</a>
+                                    <form action="/students/delete/<%= student.id %>?_method=DELETE" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="6" style="text-align: center;">No students found. Add one!</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
