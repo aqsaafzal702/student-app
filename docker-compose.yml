@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  web:
+    image: aqsaafzal99/student-app:v1
+    container_name: student-app-web
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root123
+      - DB_NAME=student_db
+      - DB_PORT=3306
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: mysql:8
+    container_name: student-app-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: student_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_/var/lib/mysql
+    restart: always
+
+volumes:
+  db_
