@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   web:
     image: aqsaafzal99/student-app:v1
@@ -24,8 +25,8 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - db_/var/lib/mysql
+      - db_data:/var/lib/mysql
     restart: always
 
 volumes:
-  db_
+  db_data:
