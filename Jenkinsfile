@@ -24,7 +24,7 @@ pipeline {
                 echo 'Deploying containers...'
                 sh '''
                     cd /var/jenkins_home/workspace/student-app-pipeline
-                    docker compose -f docker-compose-jenkins.yml up -d
+                    docker-compose -f docker-compose-jenkins.yml up -d
                 '''
             }
         }
