@@ -22,7 +22,10 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 echo 'Deploying containers...'
-                sh 'docker-compose -f docker-compose-jenkins.yml up -d'
+                sh '''
+                    cd /var/jenkins_home/workspace/student-app-pipeline
+                    docker compose -f docker-compose-jenkins.yml up -d
+                '''
             }
         }
     }
