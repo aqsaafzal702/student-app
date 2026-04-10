@@ -13,9 +13,10 @@ const Course = require('./models/Course');
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/students');
 const courseRoutes = require('./routes/courses');
-const SESSION_SECRET = process.env.SESSION_SECRET || 'mysecretkey123';
 
 const app = express();
+process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'mysecretkey123';
+
 
 // Middleware
 app.set('view engine', 'ejs');
