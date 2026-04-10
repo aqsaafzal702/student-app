@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Web Application - Part 2
   web:
-    build: .                                    # Build from Dockerfile in repo
+    build: .
     container_name: student-app-jenkins-web     
     ports:
       - "3001:3000"                             
@@ -16,6 +16,7 @@ services:
       - DB_PASSWORD=root123
       - DB_NAME=student_db
       - DB_PORT=3306
+      - SESSION_SECRET=mysecretkey123      
     depends_on:
       - db
     restart: always
@@ -34,4 +35,4 @@ services:
     restart: always
 
 volumes:
-  db_data_jenkins:  # Persistent storage for MySQL data
+  db_data_jenkins:
