@@ -17,8 +17,7 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
 # App URL (Change with your EC2 IP)
-APP_URL = "http://13.61.194.93:3001"  # Ya apna EC2 IP daal do
-
+APP_URL = "http://localhost:3000"
 def get_driver():
     from selenium.webdriver.chrome.service import Service
     options = Options()
