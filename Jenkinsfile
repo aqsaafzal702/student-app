@@ -75,25 +75,28 @@ pipeline {
         always {
             echo 'Pipeline completed!'
             
-            try {
-                mail to: 'qasimalik@gmail.com',
-                     subject: "Assignment 3 Results: ${env.TEST_STATUS}",
-                     body: """
+            // FIX: try-catch ko script {} block me wrap karo
+            script {
+                try {
+                    mail to: 'qasimalik@gmail.com',
+                         subject: "Assignment 3 Results: ${env.TEST_STATUS}",
+                         body: """
 Job: ${env.JOB_NAME}
 Build: #${env.BUILD_NUMBER}
 Status: ${env.TEST_STATUS}
 Console: ${env.BUILD_URL}console
 19 Selenium tests executed with headless Chrome
 Test Account: aqsaafzal670@gmail.com
-                    """,
-                     mimeType: 'text/html',
-                     from: 'aqsaafzal670@gmail.com'
-                echo 'Email sent to Sir (qasimalik@gmail.com)'
-            } catch (Exception e) {
-                echo "Email error: ${e.message}"
+                        """,
+                         mimeType: 'text/html',
+                         from: 'aqsaafzal670@gmail.com'
+                    echo 'Email sent to Sir (qasimalik@gmail.com)'
+                } catch (Exception e) {
+                    echo "Email error: ${e.message}"
+                }
             }
             
-            // Stop containers so deployment is DOWN initially
+            //  deployment is DOWN initially
             sh '''
                 echo "Stopping containers (deployment DOWN as required)..."
                 cd /host-ubuntu/student-app
