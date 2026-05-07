@@ -96,7 +96,7 @@ pipeline {
             // FIX: try-catch ko script {} block me wrap karo
             script {
                 try {
-                    mail to: 'qasimalik@gmail.com',
+                    //mail to: 'qasimalik@gmail.com',
                          subject: "Assignment 3 Results: ${env.TEST_STATUS}",
                          body: """
 Job: ${env.JOB_NAME}
