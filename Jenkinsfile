@@ -4,7 +4,6 @@ pipeline {
     environment {
         TEST_EMAIL = 'aqsaafzal670@gmail.com'
         TEST_PASS = '123'
-        SENDER_EMAIL = 'aqsaafzal670@gmail.com'
     }
     
     stages {
@@ -40,9 +39,10 @@ pipeline {
             steps {
                 echo 'Running automated test cases...'
                 script {
+                    // Jenkins already runs in workspace, so just cd to tests folder
                     def testResult = sh(
                         script: '''
-                            cd ${env.WORKSPACE}/assignment3-tests
+                            cd assignment3-tests
                             python3 -m venv venv
                             . venv/bin/activate
                             pip3 install -r requirements.txt
@@ -53,7 +53,12 @@ pipeline {
                         ''',
                         returnStatus: true
                     )
-                    env.TEST_STATUS = (testResult == 0) ? ' ALL 15 TESTS PASSED' : ' SOME TESTS FAILED'
+                    // Store result for console output
+                    if (testResult == 0) {
+                        echo 'ALL 15 TESTS PASSED'
+                    } else {
+                        echo 'SOME TESTS FAILED'
+                    }
                 }
             }
         }
@@ -62,15 +67,10 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed!'
-            mail to: 'aqsaafzal670@gmail.com',
-                 subject: "Assignment 3 Results: ${env.TEST_STATUS}",
-                 body: """
-                    Job: ${env.JOB_NAME}
-                    Build: #${env.BUILD_NUMBER}
-                    Status: ${env.TEST_STATUS}
-                    Console: ${env.BUILD_URL}console
-                    Tests: 15 Selenium tests executed
-                 """
+            // Email temporarily disabled due to SSL issues
+            // Will be re-enabled after evaluation if needed
+            echo 'Email notification: Temporarily skipped (SSL config issue)'
+            echo 'Check console output above for test results'
         }
     }
 }
