@@ -23,24 +23,37 @@ pipeline {
             }
         }
         
-      stage('Deploy') {
+     stage('Deploy') {
     steps {
         echo 'Deploying containers...'
         sh '''
             cd /host-ubuntu/student-app
+            
+            # Stop any existing containers first
+            docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
+            
+            # Start fresh
             docker-compose -f docker-compose.yml up -d
             
-            # Wait for app to start (internal port 3000)
-            echo "Waiting 45 seconds for app to start..."
-            sleep 45
+            # Wait for app to be fully ready (DB init + app startup)
+            echo "Waiting for app and database to initialize..."
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+                echo "Attempt $i/20: Checking app health..."
+                if curl -sf http://localhost:3000/auth/login > /dev/null 2>&1; then
+                    echo "App is ready on localhost:3000"
+                    break
+                fi
+                # Also check if DB is ready by checking container logs
+                if docker logs student-app-db 2>&1 | grep -q "ready for connections"; then
+                    echo " DB ready, waiting for app..."
+                fi
+                sleep 5
+            done
             
-            # Health check on internal port
-            echo "Checking app on localhost:3000..."
-            if curl -sf http://localhost:3000 > /dev/null 2>&1; then
-                echo " App is ready on localhost:3000"
-            else
-                echo " App not responding on localhost:3000"
-                docker logs student-app-web 2>&1 | tail -20 || true
+            # Final verification
+            if ! curl -sf http://localhost:3000/auth/login > /dev/null 2>&1; then
+                echo " App may not be fully ready, showing logs:"
+                docker logs student-app-web 2>&1 | tail -30 || true
             fi
         '''
     }
