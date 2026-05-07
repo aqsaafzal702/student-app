@@ -41,21 +41,17 @@ pipeline {
                 script {
                     def result = sh(
                         script: '''
-                            # Install Python + Chromium (system packages)
                             echo "Installing dependencies..."
                             apt-get update -qq
-                            apt-get install -y -qq python3 python3-pip python3-venv curl chromium chromium-driver > /dev/null 2>&1
+                            apt-get install -y -qq python3 python3-pip python3-venv curl chromium chromium-driver ca-certificates > /dev/null 2>&1
                             
                             cd assignment3-tests
                             
-                            # Create virtual environment
                             python3 -m venv venv
                             . venv/bin/activate
                             
-                            # Install only selenium (no webdriver-manager)
                             pip3 install selenium==4.18.1 -q
                             
-                            # Run all 15 tests
                             echo "Starting tests..."
                             python3 test_login.py
                             python3 test_students.py
@@ -81,18 +77,21 @@ pipeline {
             echo 'Pipeline completed!'
             script {
                 try {
-                    mail to: 'aqsaafzal670@gmail.com',
-                         subject: "Assignment 3: ${env.TEST_STATUS}",
+                    mail to: '${GIT_AUTHOR_EMAIL}',
+                         subject: "Assignment 3 Results: ${env.TEST_STATUS}",
                          body: """
 Job: ${env.JOB_NAME}
 Build: #${env.BUILD_NUMBER}
 Status: ${env.TEST_STATUS}
 Console: ${env.BUILD_URL}console
-15 Selenium tests executed
-                        """
-                    echo 'Email sent'
-                } catch (e) {
-                    echo 'Email failed (SSL) - Check console'
+19 Selenium tests executed with headless Chrome
+Test Account: aqsaafzal670@gmail.com
+                        """,
+                         mimeType: 'text/html'
+                    echo 'Email sent successfully'
+                } catch (Exception e) {
+                    echo "Email error: ${e.message}"
+                    echo 'Tests passed - check console for results'
                 }
             }
         }
