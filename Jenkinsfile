@@ -4,8 +4,6 @@ pipeline {
     environment {
         TEST_EMAIL = 'aqsaafzal670@gmail.com'
         TEST_PASS = '123'
-        SENDER_EMAIL = 'aqsaafzal670@gmail.com'
-        RECIPIENT_EMAIL = 'aqsaafzal670@gmail.com'
     }
     
     stages {
@@ -62,8 +60,8 @@ pipeline {
                         returnStatus: true
                     )
                     if (result == 0) {
-                        env.TEST_STATUS = 'ALL 15 TESTS PASSED'
-                        echo 'ALL 15 TESTS PASSED'
+                        env.TEST_STATUS = 'ALL 19 TESTS PASSED'
+                        echo 'ALL 19 TESTS PASSED'
                     } else {
                         env.TEST_STATUS = 'SOME TESTS FAILED'
                         echo 'SOME TESTS FAILED'
@@ -76,26 +74,32 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed!'
-            script {
-                try {
-                    mail to: "${env.RECIPIENT_EMAIL}",
-                         subject: "Assignment 3 Results: ${env.TEST_STATUS}",
-                         body: """
+            
+            try {
+                mail to: 'qasimalik@gmail.com',
+                     subject: "Assignment 3 Results: ${env.TEST_STATUS}",
+                     body: """
 Job: ${env.JOB_NAME}
 Build: #${env.BUILD_NUMBER}
 Status: ${env.TEST_STATUS}
 Console: ${env.BUILD_URL}console
 19 Selenium tests executed with headless Chrome
 Test Account: aqsaafzal670@gmail.com
-                        """,
-                         mimeType: 'text/html',
-                         from: "${env.SENDER_EMAIL}"
-                    echo 'Email sent successfully'
-                } catch (Exception e) {
-                    echo "Email error: ${e.message}"
-                    echo 'Tests passed - check console for results'
-                }
+                    """,
+                     mimeType: 'text/html',
+                     from: 'aqsaafzal670@gmail.com'
+                echo 'Email sent to Sir (qasimalik@gmail.com)'
+            } catch (Exception e) {
+                echo "Email error: ${e.message}"
             }
+            
+            // Stop containers so deployment is DOWN initially
+            sh '''
+                echo "Stopping containers (deployment DOWN as required)..."
+                cd /host-ubuntu/student-app
+                docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
+                echo "Containers stopped - deployment is now DOWN"
+            '''
         }
     }
 }
