@@ -23,23 +23,24 @@ pipeline {
             }
         }
         
-       stage('Deploy') {
+      stage('Deploy') {
     steps {
         echo 'Deploying containers...'
         sh '''
             cd /host-ubuntu/student-app
             docker-compose -f docker-compose.yml up -d
             
-            # Simple wait - POSIX compatible (no bash syntax)
+            # Wait for app to start (internal port 3000)
             echo "Waiting 45 seconds for app to start..."
             sleep 45
             
-            # Quick health check
-            echo "Checking app status..."
-            if curl -sf http://13.61.194.93:3001 > /dev/null 2>&1; then
-                echo "App is ready on 13.61.194.93:3001"
+            # Health check on internal port
+            echo "Checking app on localhost:3000..."
+            if curl -sf http://localhost:3000 > /dev/null 2>&1; then
+                echo " App is ready on localhost:3000"
             else
-                echo "App not responding yet, proceeding anyway..."
+                echo " App not responding on localhost:3000"
+                docker logs student-app-web 2>&1 | tail -20 || true
             fi
         '''
     }
@@ -89,7 +90,7 @@ pipeline {
             // FIX: try-catch ko script {} block me wrap karo
             script {
                 try {
-                    //mail to: 'qasimalik@gmail.com',
+                    mail to: 'qasimalik@gmail.com',
                          subject: "Assignment 3 Results: ${env.TEST_STATUS}",
                          body: """
 Job: ${env.JOB_NAME}
