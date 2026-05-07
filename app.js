@@ -15,6 +15,7 @@ const studentRoutes = require('./routes/students');
 const courseRoutes = require('./routes/courses');
 
 const app = express();
+process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'mysecretkey123';
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -57,7 +58,7 @@ app.get('/', (req, res) => {
 });
 
 // Database Sync + Server Start
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;  // ← Default port 3000 (docker-compose handle karega mapping)
 sequelize.sync({ alter: true })
     .then(() => {
         console.log('✅ Database connected!');
@@ -68,10 +69,3 @@ sequelize.sync({ alter: true })
     .catch(err => {
         console.log('❌ Database error:', err);
     });
-    // Debug: Environment variables check
-console.log('=== ENV DEBUG ===');
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_NAME:', process.env.DB_NAME);
-console.log('PORT:', process.env.PORT);
-console.log('================');
