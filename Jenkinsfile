@@ -37,27 +37,25 @@ pipeline {
    }
         
         stage('Run Selenium Tests') {
-            steps {
-                echo 'Running automated test cases...'
-                script {
-                    def testResult = sh(
-                        script: '''
-                           cd /host-ubuntu/assignment3-tests
-                            python3 -m venv venv
-                            . venv/bin/activate
-                            pip3 install -r requirements.txt
-                            python3 test_login.py
-                            python3 test_students.py
-                            python3 test_courses.py
-                            python3 test_additional.py
-                        ''',
-                        returnStatus: true
-                    )
-                    env.TEST_STATUS = (testResult == 0) ? 'ALL 15 TESTS PASSED' : 'SOME TESTS FAILED'
-                }
-            }
+    steps {
+        script {
+            def testResult = sh(
+                script: '''
+                    cd ${env.WORKSPACE}/assignment3-tests
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip3 install -r requirements.txt
+                    python3 test_login.py
+                    python3 test_students.py
+                    python3 test_courses.py
+                    python3 test_additional.py
+                ''',
+                returnStatus: true
+            )
+            env.TEST_STATUS = (testResult == 0) ? 'ALL 15 TESTS PASSED' : 'OME TESTS FAILED'
         }
     }
+}
     
     post {
         always {
