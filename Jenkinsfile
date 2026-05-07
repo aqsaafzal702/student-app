@@ -26,15 +26,15 @@ pipeline {
         }
         
         stage('Deploy with Docker Compose') {
-            steps {
-                echo 'Deploying containers...'
-                sh '''
-                    cd /host-ubuntu
-                    docker-compose -f docker-compose-jenkins.yml up -d
-                    sleep 15
-                '''
-            }
-        }
+       steps {
+           echo 'Deploying containers...'
+           sh '''
+               cd /host-ubuntu/student-app
+               docker-compose -f docker-compose.yml up -d
+               sleep 15
+           '''
+       }
+   }
         
         stage('Run Selenium Tests') {
             steps {
@@ -42,7 +42,7 @@ pipeline {
                 script {
                     def testResult = sh(
                         script: '''
-                           cd /host-ubuntu/assignment3-tests
+                           cd /host-ubuntu/student-app/assignment3-tests
                             python3 -m venv venv
                             . venv/bin/activate
                             pip3 install -r requirements.txt
