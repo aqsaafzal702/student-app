@@ -35,19 +35,14 @@ pipeline {
             # Start fresh
             docker-compose -f docker-compose.yml up -d
             
-            # SIMPLE FIX: Just wait 3 minutes for DB + app to initialize
-            echo " Waiting 180 seconds for database and app to initialize..."
-            sleep 180
+            # SIMPLE: Wait 5 minutes for DB initialization
+            echo " Waiting 300 seconds for database to initialize..."
+            sleep 300
             
-            # Quick health check
-            echo " Checking if app is responding..."
-            if curl -sf --max-time 10 http://localhost:3000/auth/login > /dev/null 2>&1; then
-                echo " App is ready on localhost:3000"
-            else
-                echo " App may still be starting, proceeding with tests anyway..."
-                # Show last few lines of app logs for debugging
-                docker logs student-app-web 2>&1 | tail -10 || true
-            fi
+            # Quick check
+            echo "Checking app..."
+            curl -sf --max-time 10 http://13.61.194.93:3001/auth/login > /dev/null 2>&1 && \
+                echo "App ready" || echo " Proceeding anyway..."
         '''
     }
 }
@@ -96,7 +91,7 @@ pipeline {
             // FIX: try-catch ko script {} block me wrap karo
             script {
                 try {
-                    //mail to: 'qasimalik@gmail.com',
+                    mail to: 'qasimalik@gmail.com',
                          subject: "Assignment 3 Results: ${env.TEST_STATUS}",
                          body: """
 Job: ${env.JOB_NAME}
