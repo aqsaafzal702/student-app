@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-APP_URL = "http://13.61.194.93:3001"
+APP_URL = "http://localhost:3000"
 TEST_EMAIL = "aqsaafzal670@gmail.com"
 TEST_PASS = "123"
 
