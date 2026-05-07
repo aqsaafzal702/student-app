@@ -24,15 +24,30 @@ pipeline {
         }
         
         stage('Deploy') {
-            steps {
-                echo 'Deploying containers...'
-                sh '''
-                    cd /host-ubuntu/student-app
-                    docker-compose -f docker-compose.yml up -d
-                    sleep 15
-                '''
-            }
-        }
+    steps {
+        echo 'Deploying containers...'
+        sh '''
+            cd /host-ubuntu/student-app
+            docker-compose -f docker-compose.yml up -d
+            
+            # Wait for app to be ready
+            echo "Waiting for app to start on port 3001..."
+            for i in {1..30}; do
+                if curl -sf http://localhost:3001 > /dev/null 2>&1; then
+                    echo "App is ready!"
+                    break
+                fi
+                echo "Waiting... attempt $i/30"
+                sleep 2
+            done
+            
+            # Final verification
+            if ! curl -sf http://localhost:3001 > /dev/null 2>&1; then
+                echo " Warning: App may not be fully ready, proceeding anyway"
+            fi
+        '''
+    }
+}
         
         stage('Test') {
             steps {
