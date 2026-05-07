@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo 'Deploying containers...'
                 sh '''
-                    cd /home/ubuntu
+                    cd /host-ubuntu
                     docker-compose -f docker-compose-jenkins.yml up -d
                     sleep 15
                 '''
@@ -42,7 +42,7 @@ pipeline {
                 script {
                     def testResult = sh(
                         script: '''
-                            cd /home/ubuntu/assignment3-tests
+                           cd /host-ubuntu/assignment3-tests
                             python3 -m venv venv
                             . venv/bin/activate
                             pip3 install -r requirements.txt
