@@ -5,6 +5,7 @@ pipeline {
         TEST_EMAIL = 'aqsaafzal670@gmail.com'
         TEST_PASS = '123'
         SENDER_EMAIL = 'aqsaafzal670@gmail.com'
+        RECIPIENT_EMAIL = 'aqsaafzal670@gmail.com'
     }
     
     stages {
@@ -77,7 +78,7 @@ pipeline {
             echo 'Pipeline completed!'
             script {
                 try {
-                    mail to: '${GIT_AUTHOR_EMAIL}',
+                    mail to: "${env.RECIPIENT_EMAIL}",
                          subject: "Assignment 3 Results: ${env.TEST_STATUS}",
                          body: """
 Job: ${env.JOB_NAME}
@@ -87,7 +88,8 @@ Console: ${env.BUILD_URL}console
 19 Selenium tests executed with headless Chrome
 Test Account: aqsaafzal670@gmail.com
                         """,
-                         mimeType: 'text/html'
+                         mimeType: 'text/html',
+                         from: "${env.SENDER_EMAIL}"
                     echo 'Email sent successfully'
                 } catch (Exception e) {
                     echo "Email error: ${e.message}"
