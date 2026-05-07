@@ -42,7 +42,7 @@ pipeline {
                 script {
                     def testResult = sh(
                         script: '''
-                           cd /host-ubuntu/student-app/assignment3-tests
+                           cd /host-ubuntu/assignment3-tests
                             python3 -m venv venv
                             . venv/bin/activate
                             pip3 install -r requirements.txt
