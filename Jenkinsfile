@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+     
     environment {
         TEST_EMAIL = 'aqsaafzal670@gmail.com'
         TEST_PASS = '123'
