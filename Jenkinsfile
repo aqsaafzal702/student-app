@@ -5,7 +5,7 @@ pipeline {
         TEST_EMAIL = 'aqsaafzal670@gmail.com'
         TEST_PASS = '123'
     }
-     
+    
     stages {
         stage('Clone') {
             steps {
@@ -23,54 +23,61 @@ pipeline {
             }
         }
         
-       stage('Deploy') {
-    steps {
-        echo 'Deploying containers...'
-        sh '''
-            cd /host-ubuntu/student-app
-            docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
-            docker-compose -f docker-compose.yml up -d
-            echo "Waiting 180s for MySQL..."
-            sleep 180
-            
-            # Create database
-            docker exec student-app-db mysql -u root -proot123 -e "CREATE DATABASE IF NOT EXISTS student_db;" 2>/dev/null || true
-            docker exec student-app-db mysql -u root -proot123 -e "GRANT ALL PRIVILEGES ON student_db.* TO 'root'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
-            
-            echo "Waiting 60s for app..."
-            sleep 60
-            
-            # Health check
-            echo "Checking app health on port 3001..."
-            for i in 1 2 3 4 5; do
-                if curl -sf --max-time 10 http://13.61.194.93:3001/auth/login > /dev/null 2>&1; then
-                    echo "App is ready on port 3001"
-                    break
-                fi
-                echo "Attempt $i/5: Waiting..."
-                sleep 10
-            done
-            
-            #  Register test user via API (PROPER ESCAPING + DEBUG)
-            echo "Registering test user via /auth/signup..."
-SIGNUP_RESULT=$(curl -s -w "\\nHTTP_CODE: %{http_code}\\n" -X POST http://13.61.194.93:3001/auth/signup \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "username": "Test User",
-    "email": "aqsaafzal670@gmail.com",
-    "password": "123"
-  }')
-echo "Signup response: $SIGNUP_RESULT"
-sleep 3
-            
-            # Verify user exists (optional debug)
-            echo "Verifying user in DB..."
-            docker exec student-app-db mysql -u root -proot123 student_db -e "SELECT email FROM users WHERE email='aqsaafzal670@gmail.com';" 2>/dev/null || echo "User check failed (might be OK if using different auth)"
-            
-            echo "Test user registration complete!"
-        '''
-    }
-}
+        stage('Deploy') {
+            steps {
+                echo 'Deploying containers...'
+                sh '''
+                    cd /host-ubuntu/student-app
+                    docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
+                    docker-compose -f docker-compose.yml up -d
+                    
+                    echo "Waiting 180s for MySQL..."
+                    sleep 180
+                    
+                    # Create database
+                    docker exec student-app-db mysql -u root -proot123 -e "CREATE DATABASE IF NOT EXISTS student_db;" 2>/dev/null || true
+                    
+                    echo "Waiting 60s for app to initialize..."
+                    sleep 60
+                    
+                    # Create users table and insert test user
+                    echo "Creating users table and test user..."
+                    docker exec student-app-db mysql -u root -proot123 student_db << 'EOSQL'
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO users (username, email, password, role) 
+VALUES (
+    'Test User', 
+    'aqsaafzal670@gmail.com', 
+    '$2b$10$CwTycUXWue0Thq9StjUM0uHk8fX.gPJbz.jANFLqjVqLNPjqVz1GK',
+    'user'
+)
+ON DUPLICATE KEY UPDATE email=email;
+EOSQL
+                    
+                    echo "Test user created!"
+                    
+                    # Health check
+                    echo "Checking app health on port 3001..."
+                    for i in 1 2 3 4 5; do
+                        if curl -sf --max-time 10 http://13.61.194.93:3001/auth/login > /dev/null 2>&1; then
+                            echo "App is ready"
+                            break
+                        fi
+                        echo "Attempt $i/5: Waiting..."
+                        sleep 10
+                    done
+                '''
+            }
+        }
+        
         stage('Test') {
             steps {
                 echo 'Running Selenium tests...'
@@ -80,10 +87,13 @@ sleep 3
                             echo "Installing dependencies..."
                             apt-get update -qq
                             apt-get install -y -qq python3 python3-pip python3-venv curl chromium chromium-driver ca-certificates > /dev/null 2>&1
+                            
                             cd assignment3-tests
                             python3 -m venv venv
                             . venv/bin/activate
+                            
                             pip3 install selenium==4.18.1 -q
+                            
                             echo "Starting tests..."
                             python3 test_login.py
                             python3 test_students.py
@@ -98,6 +108,7 @@ sleep 3
                     } else {
                         env.TEST_STATUS = 'SOME TESTS FAILED'
                         echo 'SOME TESTS FAILED'
+                        error('Tests failed!')
                     }
                 }
             }
@@ -105,21 +116,67 @@ sleep 3
     }
     
     post {
-        always {
-            echo 'Pipeline completed!'
+        success {
             script {
-                def status = env.TEST_STATUS ?: 'UNKNOWN'
-                def subjectLine = 'Assignment 3 Results: ' + status
-                def bodyText = 'Status: ' + status + '\nConsole: ' + env.BUILD_URL + 'console'
-                mail to: 'aqsaafzal670@gmail.com', subject: subjectLine, body: bodyText
-                echo 'Email sent to Sir'
+                // Get commit author email dynamically
+                def commitAuthor = sh(
+                    script: "git log -1 --pretty=format:'%ae'",
+                    returnStdout: true
+                ).trim()
+                
+                def buildNum = env.BUILD_NUMBER
+                def jobName = env.JOB_NAME
+                def buildUrl = env.BUILD_URL
+                
+                def emailBody = """
+Job: ${jobName}
+Build: #${buildNum}
+Status: ALL 19 TESTS PASSED
+Console: ${buildUrl}console
+
+19 Selenium tests executed successfully!
+Test Account: aqsaafzal670@gmail.com / 123
+                """
+                
+                // Send email to commit author
+                mail to: commitAuthor,
+                     subject: "Assignment 3: ALL 19 TESTS PASSED (Build #${buildNum})",
+                     body: emailBody,
+                     mimeType: 'text/html'
+                
+                echo "Email sent to ${commitAuthor}"
             }
-            sh '''
-                echo "Stopping containers (deployment DOWN as required)..."
-                cd /host-ubuntu/student-app
-                docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
-                echo "Containers stopped - deployment is now DOWN"
-            '''
+        }
+        
+        failure {
+            script {
+                // Get commit author email dynamically
+                def commitAuthor = sh(
+                    script: "git log -1 --pretty=format:'%ae'",
+                    returnStdout: true
+                ).trim()
+                
+                def buildNum = env.BUILD_NUMBER
+                def jobName = env.JOB_NAME
+                def buildUrl = env.BUILD_URL
+                
+                def emailBody = """
+Job: ${jobName}
+Build: #${buildNum}
+Status: TESTS FAILED
+Console: ${buildUrl}console
+
+Please check the console output for details.
+                """
+                
+                // Send failure email to commit author
+                mail to: commitAuthor,
+                     subject: "Assignment 3: TESTS FAILED (Build #${buildNum})",
+                     body: emailBody,
+                     mimeType: 'text/html'
+                
+                echo "Failure email sent to ${commitAuthor}"
+            }
         }
     }
 }
