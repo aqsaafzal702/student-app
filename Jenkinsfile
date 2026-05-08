@@ -23,7 +23,7 @@ pipeline {
             }
         }
         
-        stage('Deploy') {
+       stage('Deploy') {
     steps {
         echo 'Deploying containers...'
         sh '''
@@ -51,14 +51,21 @@ pipeline {
                 sleep 10
             done
             
-            # Register test user via API (Every time!)
+            #  Register test user via API (PROPER ESCAPING + DEBUG)
             echo "Registering test user aqsaafzal670@gmail.com / 123..."
-            curl -X POST http://13.61.194.93:3001/auth/register \
-              -H "Content-Type: application/json" \
-              -d '{"name":"Test User","email":"aqsaafzal670@gmail.com","password":"123","confirmPassword":"123"}' \
-              -s -o /dev/null || true
-            sleep 3
-            echo "Test user registered!"
+            REG_RESULT=$(curl -s -w "\\nHTTP_CODE: %{http_code}\\n" -X POST http://13.61.194.93:3001/auth/register \\
+              -H "Content-Type: application/json" \\
+              -d '{"name":"Test User","email":"aqsaafzal670@gmail.com","password":"123","confirmPassword":"123"}')
+            echo "Registration response: $REG_RESULT"
+            
+            # Wait for DB commit
+            sleep 5
+            
+            # Verify user exists (optional debug)
+            echo "Verifying user in DB..."
+            docker exec student-app-db mysql -u root -proot123 student_db -e "SELECT email FROM users WHERE email='aqsaafzal670@gmail.com';" 2>/dev/null || echo "User check failed (might be OK if using different auth)"
+            
+            echo "Test user registration complete!"
         '''
     }
 }
