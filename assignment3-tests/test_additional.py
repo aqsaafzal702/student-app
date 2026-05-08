@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import sys
 
 APP_URL = "http://13.61.194.93:3001"
 TEST_EMAIL = "aqsaafzal670@gmail.com"
@@ -18,23 +19,16 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
 def get_driver():
-    from selenium.webdriver.chrome.service import Service
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.binary_location = "/usr/bin/chromium"
-    service = Service(executable_path="/usr/bin/chromedriver")
-    driver = webdriver.Chrome(service=service, options=options)
-    return driver
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
 def login(driver):
     driver.get(f"{APP_URL}/auth/login")
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "email")))
     driver.find_element(By.NAME, "email").send_keys(TEST_EMAIL)
     driver.find_element(By.NAME, "password").send_keys(TEST_PASS)
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
-    WebDriverWait(driver, 10).until(EC.url_contains("/students"))
+    WebDriverWait(driver, 15).until(EC.url_contains("/students"))
+    time.sleep(2)
 
 # TC11: Empty form validation (Add Student)
 def test_empty_form_validation():
@@ -43,7 +37,6 @@ def test_empty_form_validation():
         login(driver)
         driver.get(f"{APP_URL}/students/add")
         driver.find_element(By.XPATH, "//button[@type='submit' and contains(text(),'Add Student')]").click()
-        # Should stay on same page and show error/validation
         time.sleep(1)
         alert = driver.find_elements(By.CLASS_NAME, "alert-danger")
         assert len(alert) > 0 or "required" in driver.page_source or "Error" in driver.page_source
@@ -93,12 +86,10 @@ def test_flash_messages():
     try:
         login(driver)
         driver.get(f"{APP_URL}/students/add")
-        # Submit empty for error (should show alert)
         driver.find_element(By.XPATH, "//button[@type='submit' and contains(text(),'Add Student')]").click()
         time.sleep(1)
         error_flash = driver.find_elements(By.CLASS_NAME, "alert-danger")
         assert len(error_flash) > 0
-        # Now submit with valid to get success alert
         driver.find_element(By.NAME, "name").send_keys("Flash Test Student")
         driver.find_element(By.NAME, "email").send_keys("flashtest@example.com")
         driver.find_element(By.NAME, "phone").send_keys("03121231234")
@@ -121,7 +112,6 @@ def test_back_button():
     try:
         login(driver)
         driver.get(f"{APP_URL}/students/add")
-        # There should be a "Back to Students" button (← Back to Students)
         back = driver.find_element(By.XPATH, "//a[contains(text(),'Back to Students')]")
         back.click()
         WebDriverWait(driver, 10).until(EC.url_contains("/students"))
@@ -140,4 +130,15 @@ if __name__ == "__main__":
     results.append(test_page_titles())
     results.append(test_flash_messages())
     results.append(test_back_button())
-    print(f"\nRESULTS: {sum(results)}/5 additional test cases passed")
+    
+    passed = sum(results)
+    total = len(results)
+    print(f"\nRESULTS: {passed}/{total} additional test cases passed")
+    
+    # ✅ EXIT CODE FOR JENKINS (CRITICAL!)
+    if passed < total:
+        print(f"❌ {total - passed} tests FAILED")
+        sys.exit(1)
+    else:
+        print("✅ All additional tests PASSED")
+        sys.exit(0)
