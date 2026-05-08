@@ -19,8 +19,10 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
 def get_driver():
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-
+    service = Service(executable_path="/usr/bin/chromedriver")
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    return driver
+    
 def login(driver):
     driver.get(f"{APP_URL}/auth/login")
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "email")))
