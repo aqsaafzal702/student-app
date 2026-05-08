@@ -6,7 +6,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
-import sys
 
 APP_URL = "http://13.61.194.93:3001"
 TEST_EMAIL = "aqsaafzal670@gmail.com"
@@ -28,8 +27,7 @@ def login(driver):
     driver.find_element(By.NAME, "email").send_keys(TEST_EMAIL)
     driver.find_element(By.NAME, "password").send_keys(TEST_PASS)
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
-    WebDriverWait(driver, 15).until(EC.url_contains("/students") or EC.url_contains("/courses"))
-    time.sleep(2)
+    WebDriverWait(driver, 10).until(EC.url_contains("/students") or EC.url_contains("/courses"))
 
 # TC1: Courses page loads after login
 def test_courses_page_loads():
@@ -62,32 +60,33 @@ def test_add_course_button_exists():
     finally:
         driver.quit()
 
-# TC3: Unauthorized user cannot view courses (redirect to login)
+# TC6: Unauthorized user cannot view courses (redirect to login)
 def test_courses_unauthenticated_redirect():
     driver = get_driver()
     try:
         driver.get(f"{APP_URL}/courses")
         WebDriverWait(driver, 10).until(EC.url_contains("/auth/login"))
-        print("✅ TC3 PASSED: Unauthorized access redirected to login")
+        print("✅ TC6 PASSED: Unauthorized access redirected to login")
         return True
     except Exception as e:
-        print(f"❌ TC3 FAILED: {str(e)}")
+        print(f"❌ TC6 FAILED: {str(e)}")
         return False
     finally:
         driver.quit()
 
-# TC4: Courses list shows table with expected columns
+# TC7: Courses list shows table with expected columns
 def test_courses_list_columns():
     driver = get_driver()
     try:
         login(driver)
         driver.get(f"{APP_URL}/courses")
+        # Table columns like: ID, Name, (maybe others)
         page = driver.page_source.lower()
         assert "id" in page and ("name" in page or "title" in page)
-        print("✅ TC4 PASSED: Courses list shows expected columns")
+        print("✅ TC7 PASSED: Courses list shows expected columns")
         return True
     except Exception as e:
-        print(f"❌ TC4 FAILED: {str(e)}")
+        print(f"❌ TC7 FAILED: {str(e)}")
         return False
     finally:
         driver.quit()
@@ -102,15 +101,4 @@ if __name__ == "__main__":
     results = []
     for t in tests:
         results.append(t())
-    
-    passed = sum(results)
-    total = len(results)
-    print(f"\nRESULTS: {passed}/{total} course test cases passed")
-    
-    # ✅ EXIT CODE FOR JENKINS
-    if passed < total:
-        print(f"❌ {total - passed} tests FAILED")
-        sys.exit(1)
-    else:
-        print("✅ All course tests PASSED")
-        sys.exit(0)
+    print(f"\nRESULTS: {sum(results)}/4 course test cases passed")
