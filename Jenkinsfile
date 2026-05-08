@@ -23,47 +23,51 @@ pipeline {
             }
         }
         
-    stage('Deploy') {
-    steps {
-        echo 'Deploying containers...'
-        sh '''
-            cd /host-ubuntu/student-app
-            
-            # Clean start
-            docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
-            
-            # Start containers
-            docker-compose -f docker-compose.yml up -d
-            
-            # Wait for MySQL to initialize
-            echo " Waiting 180s for MySQL to initialize..."
-            sleep 180
-            
-            # Create database using docker exec (from Jenkins container)
-            echo " Creating student_db database..."
-            docker exec student-app-db mysql -u root -ppassword123 -e "CREATE DATABASE IF NOT EXISTS student_db;" 2>/dev/null || true
-            
-            # Verify database created
-            echo " Verifying database..."
-            docker exec student-app-db mysql -u root -ppassword123 -e "SHOW DATABASES LIKE 'student_db';" 2>/dev/null || true
-            
-            # Wait for app to be ready
-            echo " Waiting 60s for app to start..."
-            sleep 60
-            
-            # Health check
-            echo "Checking app health..."
-            for i in 1 2 3 4 5; do
-                if curl -sf --max-time 10 http://13.61.194.93:3001/auth/login > /dev/null 2>&1; then
-                    echo " App is ready on 13.61.194.93:3001"
-                    break
-                fi
-                echo " Attempt $i/5: Waiting for app..."
-                sleep 10
-            done
-        '''
-    }
-}
+        stage('Deploy') {
+            steps {
+                echo 'Deploying containers...'
+                sh '''
+                    cd /host-ubuntu/student-app
+                    
+                    # Clean start
+                    docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
+                    
+                    # Start containers
+                    docker-compose -f docker-compose.yml up -d
+                    
+                    # Wait for MySQL to initialize
+                    echo "Waiting 180s for MySQL to initialize..."
+                    sleep 180
+                    
+                    # Create database using docker exec 
+                    echo "Creating student_db database..."
+                    docker exec student-app-db mysql -u root -proot123 -e "CREATE DATABASE IF NOT EXISTS student_db;" 2>/dev/null || true
+                    
+                    # Grant permissions to root user
+                    echo "Granting permissions..."
+                    docker exec student-app-db mysql -u root -proot123 -e "GRANT ALL PRIVILEGES ON student_db.* TO 'root'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
+                    
+                    # Verify database created
+                    echo "Verifying database..."
+                    docker exec student-app-db mysql -u root -proot123 -e "SHOW DATABASES LIKE 'student_db';" 2>/dev/null || true
+                    
+                    # Wait for app to be ready
+                    echo "Waiting 60s for app to start..."
+                    sleep 60
+                    
+                    # Health check (CORRECT PORT: 3000)
+                    echo "Checking app health on port 3000..."
+                    for i in 1 2 3 4 5; do
+                        if curl -sf --max-time 10 http://13.61.194.93:3000/auth/login > /dev/null 2>&1; then
+                            echo "App is ready on 13.61.194.93:3000"
+                            break
+                        fi
+                        echo "Attempt $i/5: Waiting for app..."
+                        sleep 10
+                    done
+                '''
+            }
+        }
         
         stage('Test') {
             steps {
@@ -106,7 +110,6 @@ pipeline {
         always {
             echo 'Pipeline completed!'
             
-            // FIX: try-catch ko script {} block me wrap karo
             script {
                 try {
                     //mail to: 'qasimalik@gmail.com',
@@ -127,7 +130,7 @@ Test Account: aqsaafzal670@gmail.com
                 }
             }
             
-            //  deployment is DOWN initially
+            // Stop containers so deployment is DOWN initially
             sh '''
                 echo "Stopping containers (deployment DOWN as required)..."
                 cd /host-ubuntu/student-app
