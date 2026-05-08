@@ -61,7 +61,7 @@ pipeline {
                             cd assignment3-tests
                             python3 -m venv venv
                             . venv/bin/activate
-                            pip3 install selenium==4.18.1 webdriver-manager==4.0.1 -q
+                            pip3 install selenium==4.18.1 -q
                             echo "Starting tests..."
                             python3 test_login.py
                             python3 test_students.py
