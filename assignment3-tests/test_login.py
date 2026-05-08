@@ -16,20 +16,15 @@ chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
-# App URL 
-APP_URL = "http://13.61.194.93:3000"
+# App URL (Change with your EC2 IP)
+APP_URL = "http://13.61.194.93:3001"  
+
 def get_driver():
-    from selenium.webdriver.chrome.service import Service
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.binary_location = "/usr/bin/chromium"
-    
-    #  DIRECT SYSTEM CHROMEDRIVER 
-    service = Service(executable_path="/usr/bin/chromedriver")
-    driver = webdriver.Chrome(service=service, options=options)
+    """Chrome driver setup"""
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=chrome_options
+    )
     return driver
 
 # TEST CASE 1: Login Page Load Hota Hai
