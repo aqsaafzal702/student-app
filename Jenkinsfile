@@ -83,8 +83,8 @@ pipeline {
                         returnStatus: true
                     )
                     if (result == 0) {
-                        env.TEST_STATUS = 'ALL 19 TESTS PASSED'
-                        echo 'ALL 19 TESTS PASSED'
+                        env.TEST_STATUS = 'ALL 18 TESTS PASSED'
+                        echo 'ALL 18 TESTS PASSED'
                     } else {
                         env.TEST_STATUS = 'SOME TESTS FAILED'
                         echo 'SOME TESTS FAILED'
@@ -116,7 +116,6 @@ pipeline {
         }
         always {
             echo 'Pipeline completed - containers still running (manual down if needed)'
-            // NO auto-down - you control manually
         }
     }
 }
