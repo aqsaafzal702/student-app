@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     triggers {
-        githubPush()  // Auto-trigger on push
+        githubPush()  
     }
     
     environment {
@@ -100,7 +100,7 @@ pipeline {
             script {
                 def author = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
                 mail to: author,
-                     subject: "Assignment 3: ALL TESTS PASSED",
+                     subject: "Successful Assignment 3: ALL TESTS PASSED",
                      body: "Build: ${env.BUILD_NUMBER}\nConsole: ${env.BUILD_URL}console\n\n19 Selenium tests passed!"
                 echo "Email sent to ${author}"
             }
