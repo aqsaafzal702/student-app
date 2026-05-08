@@ -86,27 +86,11 @@ pipeline {
         always {
             echo 'Pipeline completed!'
             script {
-                try {
-                    def jobName = env.JOB_NAME
-                    def buildNum = env.BUILD_NUMBER
-                    def testStatus = env.TEST_STATUS
-                    def buildUrl = env.BUILD_URL
-                    def emailBody = "Job: " + jobName + "\n" +
-                                    "Build: #" + buildNum + "\n" +
-                                    "Status: " + testStatus + "\n" +
-                                    "Console: " + buildUrl + "console\n" +
-                                    "19 Selenium tests executed with headless Chrome\n" +
-                                    "Test Account: aqsaafzal670@gmail.com"
-                    
-                    //mail to: 'qasimalik@gmail.com',
-                         subject: "Assignment 3 Results: " + testStatus,
-                         body: emailBody,
-                         mimeType: 'text/html',
-                         from: 'aqsaafzal670@gmail.com'
-                    echo 'Email sent to Sir (qasimalik@gmail.com)'
-                } catch (Exception e) {
-                    echo "Email error: " + e.message
-                }
+                def status = env.TEST_STATUS ?: 'UNKNOWN'
+                def subjectLine = 'Assignment 3 Results: ' + status
+                def bodyText = 'Status: ' + status + '\nConsole: ' + env.BUILD_URL + 'console'
+                mail to: 'aqsaafzal670@gmail.com', subject: subjectLine, body: bodyText
+                echo 'Email sent to Sir'
             }
             sh '''
                 echo "Stopping containers (deployment DOWN as required)..."
