@@ -6,7 +6,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 # Chrome Options (Headless for EC2)
@@ -17,14 +16,11 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
 # App URL (Change with your EC2 IP)
-APP_URL = "http://13.61.194.93:3001"  # Ya apna EC2 IP daal do
+APP_URL = "http://13.61.194.93:3001"  
 
 def get_driver():
-    """Chrome driver setup"""
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
-        options=chrome_options
-    )
+    service = Service(executable_path="/usr/bin/chromedriver")  
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
 # TEST CASE 1: Login Page Load Hota Hai
