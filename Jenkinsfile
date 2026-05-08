@@ -28,41 +28,21 @@ pipeline {
                 echo 'Deploying containers...'
                 sh '''
                     cd /host-ubuntu/student-app
-                    
-                    # Clean start
                     docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
-                    
-                    # Start containers
                     docker-compose -f docker-compose.yml up -d
-                    
-                    # Wait for MySQL to initialize
-                    echo "Waiting 180s for MySQL to initialize..."
+                    echo "Waiting 180s for MySQL..."
                     sleep 180
-                    
-                    # Create database using docker exec 
-                    echo "Creating student_db database..."
                     docker exec student-app-db mysql -u root -proot123 -e "CREATE DATABASE IF NOT EXISTS student_db;" 2>/dev/null || true
-                    
-                    # Grant permissions to root user
-                    echo "Granting permissions..."
                     docker exec student-app-db mysql -u root -proot123 -e "GRANT ALL PRIVILEGES ON student_db.* TO 'root'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
-                    
-                    # Verify database created
-                    echo "Verifying database..."
-                    docker exec student-app-db mysql -u root -proot123 -e "SHOW DATABASES LIKE 'student_db';" 2>/dev/null || true
-                    
-                    # Wait for app to be ready
-                    echo "Waiting 60s for app to start..."
+                    echo "Waiting 60s for app..."
                     sleep 60
-                    
-                    # Health check (CORRECT PORT: 3000)
                     echo "Checking app health on port 3000..."
                     for i in 1 2 3 4 5; do
                         if curl -sf --max-time 10 http://13.61.194.93:3000/auth/login > /dev/null 2>&1; then
-                            echo "App is ready on 13.61.194.93:3000"
+                            echo "App is ready on port 3000"
                             break
                         fi
-                        echo "Attempt $i/5: Waiting for app..."
+                        echo "Attempt $i/5: Waiting..."
                         sleep 10
                     done
                 '''
@@ -78,14 +58,10 @@ pipeline {
                             echo "Installing dependencies..."
                             apt-get update -qq
                             apt-get install -y -qq python3 python3-pip python3-venv curl chromium chromium-driver ca-certificates > /dev/null 2>&1
-                            
                             cd assignment3-tests
-                            
                             python3 -m venv venv
                             . venv/bin/activate
-                            
                             pip3 install selenium==4.18.1 -q
-                            
                             echo "Starting tests..."
                             python3 test_login.py
                             python3 test_students.py
@@ -109,19 +85,18 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed!'
-            
             script {
                 try {
-                    //mail to: 'qasimalik@gmail.com',
+                    def emailBody = "Job: ${env.JOB_NAME}\n" +
+                                    "Build: #${env.BUILD_NUMBER}\n" +
+                                    "Status: ${env.TEST_STATUS}\n" +
+                                    "Console: ${env.BUILD_URL}console\n" +
+                                    "19 Selenium tests executed with headless Chrome\n" +
+                                    "Test Account: aqsaafzal670@gmail.com"
+                    
+                   // mail to: 'qasimalik@gmail.com',
                          subject: "Assignment 3 Results: ${env.TEST_STATUS}",
-                         body: """
-Job: ${env.JOB_NAME}
-Build: #${env.BUILD_NUMBER}
-Status: ${env.TEST_STATUS}
-Console: ${env.BUILD_URL}console
-19 Selenium tests executed with headless Chrome
-Test Account: aqsaafzal670@gmail.com
-                        """,
+                         body: emailBody,
                          mimeType: 'text/html',
                          from: 'aqsaafzal670@gmail.com'
                     echo 'Email sent to Sir (qasimalik@gmail.com)'
@@ -129,8 +104,6 @@ Test Account: aqsaafzal670@gmail.com
                     echo "Email error: ${e.message}"
                 }
             }
-            
-            // Stop containers so deployment is DOWN initially
             sh '''
                 echo "Stopping containers (deployment DOWN as required)..."
                 cd /host-ubuntu/student-app
