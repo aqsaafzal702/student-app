@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-APP_URL = "http://13.61.194.93:3000"
+APP_URL = "http://13.61.194.93:3001"
 TEST_EMAIL = "aqsaafzal670@gmail.com"
 TEST_PASS = "123"
 
@@ -18,18 +18,7 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
 def get_driver():
-    from selenium.webdriver.chrome.service import Service
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.binary_location = "/usr/bin/chromium"
-    
-    #  DIRECT SYSTEM CHROMEDRIVER 
-    service = Service(executable_path="/usr/bin/chromedriver")
-    driver = webdriver.Chrome(service=service, options=options)
-    return driver
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 def login(driver):
     driver.get(f"{APP_URL}/auth/login")
