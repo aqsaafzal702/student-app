@@ -87,21 +87,25 @@ pipeline {
             echo 'Pipeline completed!'
             script {
                 try {
-                    def emailBody = "Job: ${env.JOB_NAME}\n" +
-                                    "Build: #${env.BUILD_NUMBER}\n" +
-                                    "Status: ${env.TEST_STATUS}\n" +
-                                    "Console: ${env.BUILD_URL}console\n" +
+                    def jobName = env.JOB_NAME
+                    def buildNum = env.BUILD_NUMBER
+                    def testStatus = env.TEST_STATUS
+                    def buildUrl = env.BUILD_URL
+                    def emailBody = "Job: " + jobName + "\n" +
+                                    "Build: #" + buildNum + "\n" +
+                                    "Status: " + testStatus + "\n" +
+                                    "Console: " + buildUrl + "console\n" +
                                     "19 Selenium tests executed with headless Chrome\n" +
                                     "Test Account: aqsaafzal670@gmail.com"
                     
-                   // mail to: 'qasimalik@gmail.com',
-                         subject: "Assignment 3 Results: ${env.TEST_STATUS}",
+                    //mail to: 'qasimalik@gmail.com',
+                         subject: "Assignment 3 Results: " + testStatus,
                          body: emailBody,
                          mimeType: 'text/html',
                          from: 'aqsaafzal670@gmail.com'
                     echo 'Email sent to Sir (qasimalik@gmail.com)'
                 } catch (Exception e) {
-                    echo "Email error: ${e.message}"
+                    echo "Email error: " + e.message
                 }
             }
             sh '''
