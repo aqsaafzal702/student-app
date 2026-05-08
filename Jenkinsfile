@@ -24,31 +24,44 @@ pipeline {
         }
         
         stage('Deploy') {
-            steps {
-                echo 'Deploying containers...'
-                sh '''
-                    cd /host-ubuntu/student-app
-                    docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
-                    docker-compose -f docker-compose.yml up -d
-                    echo "Waiting 180s for MySQL..."
-                    sleep 180
-                    docker exec student-app-db mysql -u root -proot123 -e "CREATE DATABASE IF NOT EXISTS student_db;" 2>/dev/null || true
-                    docker exec student-app-db mysql -u root -proot123 -e "GRANT ALL PRIVILEGES ON student_db.* TO 'root'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
-                    echo "Waiting 60s for app..."
-                    sleep 60
-                    echo "Checking app health on port 3001..."
-                    for i in 1 2 3 4 5; do
-                        if curl -sf --max-time 10 http://13.61.194.93:3001/auth/login > /dev/null 2>&1; then
-                            echo "App is ready on port 3001"
-                            break
-                        fi
-                        echo "Attempt $i/5: Waiting..."
-                        sleep 10
-                    done
-                '''
-            }
-        }
-        
+    steps {
+        echo 'Deploying containers...'
+        sh '''
+            cd /host-ubuntu/student-app
+            docker-compose -f docker-compose.yml down > /dev/null 2>&1 || true
+            docker-compose -f docker-compose.yml up -d
+            echo "Waiting 180s for MySQL..."
+            sleep 180
+            
+            # Create database
+            docker exec student-app-db mysql -u root -proot123 -e "CREATE DATABASE IF NOT EXISTS student_db;" 2>/dev/null || true
+            docker exec student-app-db mysql -u root -proot123 -e "GRANT ALL PRIVILEGES ON student_db.* TO 'root'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
+            
+            echo "Waiting 60s for app..."
+            sleep 60
+            
+            # Health check
+            echo "Checking app health on port 3001..."
+            for i in 1 2 3 4 5; do
+                if curl -sf --max-time 10 http://13.61.194.93:3001/auth/login > /dev/null 2>&1; then
+                    echo "App is ready on port 3001"
+                    break
+                fi
+                echo "Attempt $i/5: Waiting..."
+                sleep 10
+            done
+            
+            # Register test user via API (Every time!)
+            echo "Registering test user aqsaafzal670@gmail.com / 123..."
+            curl -X POST http://13.61.194.93:3001/auth/register \
+              -H "Content-Type: application/json" \
+              -d '{"name":"Test User","email":"aqsaafzal670@gmail.com","password":"123","confirmPassword":"123"}' \
+              -s -o /dev/null || true
+            sleep 3
+            echo "Test user registered!"
+        '''
+    }
+}
         stage('Test') {
             steps {
                 echo 'Running Selenium tests...'
