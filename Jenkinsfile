@@ -115,7 +115,7 @@ pipeline {
             }
         }
         always {
-            echo 'Pipeline completed - containers still running (manual down if needed)'
+            echo 'Pipeline completed'
         }
     }
 }
