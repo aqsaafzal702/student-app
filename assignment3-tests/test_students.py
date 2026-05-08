@@ -8,7 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 
-APP_URL = "http://13.61.194.93:3001"
+APP_URL = "http://13.61.194.93:3000"
 TEST_EMAIL = "aqsaafzal670@gmail.com"
 TEST_PASS = "123"
 
