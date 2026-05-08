@@ -36,10 +36,10 @@ pipeline {
                     docker exec student-app-db mysql -u root -proot123 -e "GRANT ALL PRIVILEGES ON student_db.* TO 'root'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
                     echo "Waiting 60s for app..."
                     sleep 60
-                    echo "Checking app health on port 3000..."
+                    echo "Checking app health on port 3001..."
                     for i in 1 2 3 4 5; do
-                        if curl -sf --max-time 10 http://13.61.194.93:3000/auth/login > /dev/null 2>&1; then
-                            echo "App is ready on port 3000"
+                        if curl -sf --max-time 10 http://13.61.194.93:3001/auth/login > /dev/null 2>&1; then
+                            echo "App is ready on port 3001"
                             break
                         fi
                         echo "Attempt $i/5: Waiting..."
@@ -61,7 +61,7 @@ pipeline {
                             cd assignment3-tests
                             python3 -m venv venv
                             . venv/bin/activate
-                            pip3 install selenium==4.18.1 -q
+                            pip3 install selenium==4.18.1 webdriver-manager==4.0.1 -q
                             echo "Starting tests..."
                             python3 test_login.py
                             python3 test_students.py
