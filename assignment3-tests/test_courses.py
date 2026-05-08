@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import sys
 
 APP_URL = "http://13.61.194.93:3001"
 TEST_EMAIL = "aqsaafzal670@gmail.com"
@@ -19,23 +20,16 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
 def get_driver():
-    from selenium.webdriver.chrome.service import Service
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.binary_location = "/usr/bin/chromium"
-    service = Service(executable_path="/usr/bin/chromedriver")
-    driver = webdriver.Chrome(service=service, options=options)
-    return driver
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
 def login(driver):
     driver.get(f"{APP_URL}/auth/login")
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "email")))
     driver.find_element(By.NAME, "email").send_keys(TEST_EMAIL)
     driver.find_element(By.NAME, "password").send_keys(TEST_PASS)
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
-    WebDriverWait(driver, 10).until(EC.url_contains("/students") or EC.url_contains("/courses"))
+    WebDriverWait(driver, 15).until(EC.url_contains("/students") or EC.url_contains("/courses"))
+    time.sleep(2)
 
 # TC1: Courses page loads after login
 def test_courses_page_loads():
@@ -68,7 +62,7 @@ def test_add_course_button_exists():
     finally:
         driver.quit()
 
-# TC6: Unauthorized user cannot view courses (redirect to login)
+# TC3: Unauthorized user cannot view courses (redirect to login)
 def test_courses_unauthenticated_redirect():
     driver = get_driver()
     try:
@@ -77,24 +71,23 @@ def test_courses_unauthenticated_redirect():
         print("✅ TC3 PASSED: Unauthorized access redirected to login")
         return True
     except Exception as e:
-        print(f"❌ TC6 FAILED: {str(e)}")
+        print(f"❌ TC3 FAILED: {str(e)}")
         return False
     finally:
         driver.quit()
 
-# TC7: Courses list shows table with expected columns
+# TC4: Courses list shows table with expected columns
 def test_courses_list_columns():
     driver = get_driver()
     try:
         login(driver)
         driver.get(f"{APP_URL}/courses")
-        # Table columns like: ID, Name, (maybe others)
         page = driver.page_source.lower()
         assert "id" in page and ("name" in page or "title" in page)
         print("✅ TC4 PASSED: Courses list shows expected columns")
         return True
     except Exception as e:
-        print(f"❌ TC7 FAILED: {str(e)}")
+        print(f"❌ TC4 FAILED: {str(e)}")
         return False
     finally:
         driver.quit()
@@ -109,4 +102,15 @@ if __name__ == "__main__":
     results = []
     for t in tests:
         results.append(t())
-    print(f"\nRESULTS: {sum(results)}/4 course test cases passed")
+    
+    passed = sum(results)
+    total = len(results)
+    print(f"\nRESULTS: {passed}/{total} course test cases passed")
+    
+    # ✅ EXIT CODE FOR JENKINS
+    if passed < total:
+        print(f"❌ {total - passed} tests FAILED")
+        sys.exit(1)
+    else:
+        print("✅ All course tests PASSED")
+        sys.exit(0)
