@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-APP_URL = "http://13.61.194.93:3000"
+APP_URL = "http://13.61.194.93:3001"
 TEST_EMAIL = "aqsaafzal670@gmail.com"
 TEST_PASS = "123"
 
@@ -19,18 +19,7 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
 def get_driver():
-    from selenium.webdriver.chrome.service import Service
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.binary_location = "/usr/bin/chromium"
-    
-    #  DIRECT SYSTEM CHROMEDRIVER 
-    service = Service(executable_path="/usr/bin/chromedriver")
-    driver = webdriver.Chrome(service=service, options=options)
-    return driver
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 def login(driver):
     driver.get(f"{APP_URL}/auth/login")
@@ -77,7 +66,7 @@ def test_courses_unauthenticated_redirect():
     try:
         driver.get(f"{APP_URL}/courses")
         WebDriverWait(driver, 10).until(EC.url_contains("/auth/login"))
-        print("✅ TC6 PASSED: Unauthorized access redirected to login")
+        print("✅ TC3 PASSED: Unauthorized access redirected to login")
         return True
     except Exception as e:
         print(f"❌ TC6 FAILED: {str(e)}")
@@ -94,7 +83,7 @@ def test_courses_list_columns():
         # Table columns like: ID, Name, (maybe others)
         page = driver.page_source.lower()
         assert "id" in page and ("name" in page or "title" in page)
-        print("✅ TC7 PASSED: Courses list shows expected columns")
+        print("✅ TC4 PASSED: Courses list shows expected columns")
         return True
     except Exception as e:
         print(f"❌ TC7 FAILED: {str(e)}")
