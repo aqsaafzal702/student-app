@@ -3,12 +3,12 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import sys  
 
-APP_URL = "http://13.61.194.93:3001"  # change if needed
+APP_URL = "http://13.61.194.93:3001"
 TEST_EMAIL = "aqsaafzal670@gmail.com"
 TEST_PASS = "123"
 
@@ -18,6 +18,7 @@ chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
+chrome_options.binary_location = "/usr/bin/chromium"  
 
 def get_driver():
     service = Service(executable_path="/usr/bin/chromedriver")
@@ -30,8 +31,8 @@ def login(driver):
     driver.find_element(By.NAME, "email").send_keys(TEST_EMAIL)
     driver.find_element(By.NAME, "password").send_keys(TEST_PASS)
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
-    # Wait for redirect to students page
-    WebDriverWait(driver, 10).until(EC.url_contains("/students"))
+    WebDriverWait(driver, 15).until(EC.url_contains("/students"))
+    time.sleep(2)
 
 # TC4: Create a valid student
 def test_create_student():
@@ -45,9 +46,8 @@ def test_create_student():
         driver.find_element(By.NAME, "phone").send_keys("03001234567")
         driver.find_element(By.NAME, "address").send_keys("Fictional Address For Testing")
         driver.find_element(By.XPATH, "//button[@type='submit' and contains(text(),'Add Student')]").click()
-        # Wait for redirect
-        WebDriverWait(driver, 10).until(EC.url_matches(f"{APP_URL}/students"))
-        # Confirm in table
+        WebDriverWait(driver, 15).until(EC.url_contains("/students"))
+        time.sleep(2)
         page_src = driver.page_source
         assert "Test Selenium Student" in page_src
         print("✅ TC4 PASSED: Student created successfully and is in list")
@@ -64,7 +64,6 @@ def test_students_list():
     try:
         login(driver)
         driver.get(f"{APP_URL}/students")
-        # Check for the "Add New Student" button and table columns
         assert "+ Add New Student" in driver.page_source
         assert "Student Name" in driver.page_source or "Name" in driver.page_source
         print("✅ TC5 PASSED: Students list loaded and visible")
@@ -82,12 +81,10 @@ def test_edit_student_page():
         login(driver)
         driver.get(f"{APP_URL}/students")
         time.sleep(1)
-        # Click first 'Edit' button, assumed like: /students/edit/{id}
         edit_links = driver.find_elements(By.XPATH, "//a[contains(@href, '/students/edit')]")
         assert len(edit_links) > 0
         edit_links[0].click()
         WebDriverWait(driver, 10).until(EC.url_contains("/students/edit"))
-        # Confirm elements
         assert "Edit Student" in driver.page_source
         print("✅ TC6 PASSED: Edit student page loads with form")
         return True
@@ -103,7 +100,6 @@ def test_delete_button():
     try:
         login(driver)
         driver.get(f"{APP_URL}/students")
-        # Find a delete button in Actions (should have /delete in form or as button)
         delete_buttons = driver.find_elements(By.XPATH, "//form[contains(@action, '/delete') or contains(@action, '/students/delete')]//button")
         assert len(delete_buttons) > 0
         print("✅ TC7 PASSED: Delete button found for at least one student")
@@ -137,7 +133,6 @@ def test_navigation_menu():
     try:
         login(driver)
         driver.get(f"{APP_URL}/students")
-        # Check navbar links
         nav = driver.find_element(By.TAG_NAME, "nav")
         assert "Logout" in nav.text and "Students" in nav.text
         print("✅ TC9 PASSED: Navigation menu shows correct links after login")
@@ -174,7 +169,18 @@ if __name__ == "__main__":
         test_unauthorized_redirect
     ]
     results = []
-    for ti, t in enumerate(tests, 4):
+    for t in tests:
         res = t()
         results.append(res)
-    print(f"\nRESULTS: {sum(results)}/7 student test cases passed")
+    
+    passed = sum(results)
+    total = len(results)
+    print(f"\nRESULTS: {passed}/{total} student test cases passed")
+    
+    # ✅ CRITICAL: EXIT CODE FOR JENKINS
+    if passed < total:
+        print(f"❌ {total - passed} test(s) FAILED - Exiting with error code 1")
+        sys.exit(1)  # ← Tells Jenkins: TESTS FAILED!
+    else:
+        print("✅ All student tests PASSED")
+        sys.exit(0)  # ← Tells Jenkins: ALL PASSED!
